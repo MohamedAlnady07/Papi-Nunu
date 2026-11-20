@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="midnight-gold">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Star Map of Us — For Nunu</title>
+    <meta
+      name="description"
+      content="An interactive sky written for the person who means everything to me."
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23060914'/%3E%3Cpath d='M32 10 L35.5 28.5 L54 32 L35.5 35.5 L32 54 L28.5 35.5 L10 32 L28.5 28.5 Z' fill='%23E9C476'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="sky-stage" class="sky-stage">
+      <canvas
+        id="sky-canvas"
+        aria-label="Interactive night sky with a seven-star constellation"
+      ></canvas>
+
+      <div id="whisper-layer" class="whisper-layer" aria-hidden="true"></div>
+
+      <div id="hotspot-layer" class="hotspot-layer is-dimmed">
+        <div id="star-hotspots"></div>
+        <div id="wish-hotspots"></div>
+      </div>
+
+      <!-- Top HUD -->
+      <header id="sky-hud-top" class="sky-hud-top is-hidden">
+        <div id="hud-dedication" class="hud-dedication"></div>
+        <div class="hud-actions">
+          <button
+            id="btn-read-letter"
+            class="pill-btn pill-btn--heart"
+            type="button"
+            hidden
+          >
+            Read Letter
+          </button>
+          <button
+            id="btn-sound"
+            class="pill-btn"
+            type="button"
+            aria-pressed="false"
+          >
+            Sound: On
+          </button>
+        </div>
+      </header>
+
+      <!-- Bottom Constellation Progress Dock -->
+      <footer id="sky-hud-bottom" class="sky-hud-bottom is-hidden">
+        <div
+          id="progress-track"
+          class="progress-track"
+          role="group"
+          aria-label="Constellation stars"
+        ></div>
+        <p id="hud-hint" class="hud-hint"></p>
+      </footer>
+
+      <!-- Constellation Completion Prompt -->
+      <section
+        id="completion-banner"
+        class="completion-banner"
+        aria-live="polite"
+        hidden
+      >
+        <h2 class="completion-banner__title">Our constellation is complete</h2>
+        <p class="completion-banner__sub">
+          Every star in our sky is shining. Whenever you are ready, open the
+          letter I left for you.
+        </p>
+        <button
+          id="btn-open-finale"
+          class="pill-btn pill-btn--primary"
+          type="button"
+        >
+          Read My Letter To You
+        </button>
+      </section>
+
+      <!-- Act I: Arrival Curtain -->
+      <section id="curtain" class="curtain" aria-label="Welcome">
+        <div class="curtain__inner">
+          <p id="curtain-dedication" class="curtain__dedication"></p>
+          <div class="curtain__rule" aria-hidden="true"></div>
+          <h1 id="curtain-headline" class="curtain__headline"></h1>
+          <p id="curtain-subtext" class="curtain__subtext"></p>
+          <button
+            id="btn-enter-sky"
+            class="pill-btn pill-btn--primary"
+            type="button"
+          ></button>
+        </div>
+      </section>
+
+      <!-- Act II: Star Note Sheet -->
+      <div
+        id="note-backdrop"
+        class="modal-backdrop"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="note-title"
+        hidden
+      >
+        <article id="note-sheet" class="note-sheet">
+          <header class="note-sheet__header">
+            <div class="note-sheet__meta">
+              <span id="note-roman" class="note-sheet__roman"></span>
+              <span id="note-label" class="note-sheet__label"></span>
+            </div>
+            <button
+              id="btn-close-note"
+              class="icon-close-btn"
+              type="button"
+              aria-label="Close star note"
+            >
+              &times;
+            </button>
+          </header>
+
+          <div id="note-body" class="note-sheet__body">
+            <h2 id="note-title" class="note-sheet__title"></h2>
+            <div id="note-paragraphs" class="note-sheet__paragraphs"></div>
+            <figure id="note-figure" class="note-sheet__figure" hidden>
+              <img id="note-photo" class="note-sheet__photo" src="" alt="" />
+              <figcaption
+                id="note-caption"
+                class="note-sheet__caption"
+              ></figcaption>
+            </figure>
+          </div>
+
+          <footer class="note-sheet__footer">
+            <button id="btn-prev-star" class="pill-btn" type="button">
+              Previous
+            </button>
+            <button id="btn-next-star" class="pill-btn" type="button">
+              Next Star
+            </button>
+          </footer>
+        </article>
+      </div>
+
+      <!-- Act III: Final Love Letter -->
+      <div
+        id="letter-backdrop"
+        class="modal-backdrop modal-backdrop--center"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="letter-title"
+        hidden
+      >
+        <article class="letter-sheet">
+          <header class="letter-sheet__topbar">
+            <span id="letter-eyebrow" class="letter-sheet__eyebrow"></span>
+            <button
+              id="btn-close-letter"
+              class="icon-close-btn"
+              type="button"
+              aria-label="Close letter"
+            >
+              &times;
+            </button>
+          </header>
+
+          <div id="letter-scroll" class="letter-sheet__scroll">
+            <h2 id="letter-title" class="letter-sheet__title"></h2>
+
+            <div id="time-together" class="time-together" hidden>
+              <p class="time-together__label">Time Since Our Beginning</p>
+              <div class="time-together__grid">
+                <div class="time-together__cell">
+                  <span id="tt-days" class="time-together__num">0</span>
+                  <span class="time-together__unit">Days</span>
+                </div>
+                <div class="time-together__cell">
+                  <span id="tt-hours" class="time-together__num">00</span>
+                  <span class="time-together__unit">Hours</span>
+                </div>
+                <div class="time-together__cell">
+                  <span id="tt-minutes" class="time-together__num">00</span>
+                  <span class="time-together__unit">Minutes</span>
+                </div>
+                <div class="time-together__cell">
+                  <span id="tt-seconds" class="time-together__num">00</span>
+                  <span class="time-together__unit">Seconds</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="letter-prose">
+              <p id="letter-salutation" class="letter-prose__salutation"></p>
+              <div id="letter-paragraphs" class="letter-prose__body"></div>
+              <p id="letter-closing" class="letter-prose__closing"></p>
+              <p id="letter-signature" class="letter-prose__signature"></p>
+            </div>
+
+            <section class="wish-box" aria-label="Release a wish into our sky">
+              <h3 class="wish-box__heading">Release a Wish Into Our Sky</h3>
+              <p class="wish-box__sub">
+                Leave a wish, a dream, or a quiet note for us — it will become a
+                star shining in this sky whenever you return.
+              </p>
+              <form id="wish-form" class="wish-form">
+                <input
+                  id="wish-input"
+                  class="wish-form__input"
+                  type="text"
+                  maxlength="140"
+                  placeholder="Write a wish for us..."
+                  aria-label="Write a wish for us"
+                  required
+                />
+                <button class="pill-btn pill-btn--heart" type="submit">
+                  Send Into Sky
+                </button>
+              </form>
+            </section>
+          </div>
+        </article>
+      </div>
+
+      <!-- Saved Wish Star Popover -->
+      <aside
+        id="wish-popover"
+        class="wish-popover"
+        role="status"
+        aria-live="polite"
+        hidden
+      >
+        <div class="wish-popover__top">
+          <span class="wish-popover__eyebrow">A Wish In Our Sky</span>
+          <button
+            id="btn-close-wish"
+            class="icon-close-btn"
+            type="button"
+            aria-label="Close wish"
+          >
+            &times;
+          </button>
+        </div>
+        <p id="wish-popover-text" class="wish-popover__text"></p>
+      </aside>
+
+      <!-- Gentle Status Toast -->
+      <div id="sky-toast" class="sky-toast" role="status" hidden></div>
+
+      <!-- Hidden Personalization Studio Drawer (?edit=1 or Shift + E) -->
+      <aside
+        id="studio-drawer"
+        class="studio-drawer"
+        data-open="false"
+        aria-label="Customize Our Sky"
+      >
+        <header class="studio-drawer__header">
+          <h2 class="studio-drawer__title">Customize Our Sky</h2>
+          <button
+            id="btn-close-studio"
+            class="icon-close-btn"
+            type="button"
+            aria-label="Close studio"
+          >
+            &times;
+          </button>
+        </header>
+
+        <div class="studio-tabs" role="tablist">
+          <button
+            class="studio-tab is-active"
+            type="button"
+            role="tab"
+            data-studio-tab="basics"
+            aria-selected="true"
+          >
+            Basics
+          </button>
+          <button
+            class="studio-tab"
+            type="button"
+            role="tab"
+            data-studio-tab="stars"
+            aria-selected="false"
+          >
+            Stars
+          </button>
+          <button
+            class="studio-tab"
+            type="button"
+            role="tab"
+            data-studio-tab="letter"
+            aria-selected="false"
+          >
+            Letter
+          </button>
+        </div>
+
+        <div id="studio-body" class="studio-body"></div>
+
+        <div class="studio-actions-row">
+          <button id="studio-preview-finale" class="pill-btn" type="button">
+            Preview Finale
+          </button>
+          <button id="studio-reset-journey" class="pill-btn" type="button">
+            Reset Journey
+          </button>
+          <button id="studio-reset-config" class="pill-btn" type="button">
+            Reset Defaults
+          </button>
+          <button
+            id="studio-download"
+            class="pill-btn pill-btn--heart"
+            type="button"
+          >
+            Download config.js
+          </button>
+        </div>
+      </aside>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="audio.js"></script>
+    <script src="sky.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
